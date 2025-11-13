@@ -1,0 +1,49 @@
+[tool.black]
+line-length = 120
+
+[tool.pytest.ini_options]
+pythonpath = ["src/"]
+testpaths = "tests"
+
+[tool.isort]
+profile = "black"
+
+[tool.bandit]
+exclude_dirs = ["tests"]
+
+[tool.mypy]
+exclude = ["tests", "build"]
+check_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_untyped_defs = true
+namespace_packages = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+
+[build-system]
+requires = ["setuptools >= 40.9.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cactus_client"
+dynamic = ["version", "readme"]
+description = "Schema and mini webserver for accepting CSIP-Aus subscription notifications via dynamic webhook URIs."
+dependencies = [
+    "dataclass-wizard>=0.35.0,<1",
+
+] # These dependencies are purely for the schema (the default reference). Server dependencies require "server"
+
+[project.optional-dependencies]
+server = ["aiohttp>=3.11.12,<4"]
+dev = ["bandit", "black", "coverage", "flake8", "flake8-bugbear", "mypy"]
+test = ["assertical", "pytest", "pytest-aiohttp", "freezegun"]
+
+[tool.setuptools.package-data]
+"cactus_client_notifications" = ["py.typed", "**/*.xsd"]
+
+[tool.setuptools.dynamic]
+version = { attr = "cactus_client_notifications.__version__" }
+readme = { file = ["README.md"], content-type = "text/markdown" }
