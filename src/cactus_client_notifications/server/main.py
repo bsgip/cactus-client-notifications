@@ -88,8 +88,10 @@ def create_app() -> web.Application:
     # Add routes for Test Runner
     mount = server_settings.mount_point
     app.router.add_route(
-        "POST", handler.path_join(mount, schema.URI_MANAGE_ENDPOINT_LIST), handler.handle_post_manage_endpoint_list
+        "POST", handler.path_join(mount, schema.URI_MANAGE_ENDPOINT_LIST), handler.post_manage_endpoint_list
     )
+    app.router.add_route("GET", handler.path_join(mount, schema.URI_MANAGE_ENDPOINT), handler.get_manage_endpoint)
+    app.router.add_route("PUT", handler.path_join(mount, schema.URI_MANAGE_ENDPOINT), handler.put_manage_endpoint)
 
     # Start the periodic task
     app.cleanup_ctx.append(setup_periodic_task)

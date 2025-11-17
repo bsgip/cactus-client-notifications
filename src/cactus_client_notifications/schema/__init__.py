@@ -71,4 +71,6 @@ class CollectEndpointResponse(JSONWizard):
 class ConfigureEndpointRequest(JSONWizard):
     """Used for adjusting the configuration of an existing endpoint"""
 
-    disabled: bool  # If true - submitted requests to the endpoint will be served with a HTTP 500 and ignored.
+    enabled: (
+        bool  # if False - submitted requests to the endpoint will be served with a HTTP 500 and ignored. Defaults True
+    )

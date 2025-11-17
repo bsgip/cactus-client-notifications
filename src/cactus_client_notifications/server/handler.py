@@ -5,6 +5,8 @@ from aiohttp import ContentTypeError, web
 
 from cactus_client_notifications.schema import (
     URI_ENDPOINT,
+    CollectEndpointResponse,
+    ConfigureEndpointRequest,
     CreateEndpointRequest,
     CreateEndpointResponse,
 )
@@ -58,7 +60,7 @@ def generate_public_uri(server_settings: ServerSettings, endpoint_id: str) -> st
     )
 
 
-async def handle_post_manage_endpoint_list(request: web.Request) -> web.Response:
+async def post_manage_endpoint_list(request: web.Request) -> web.Response:
     """Expects a CreateEndpointResponse to be included in the POST body. Creates a new endpoint
 
     Args:
@@ -92,3 +94,71 @@ async def handle_post_manage_endpoint_list(request: web.Request) -> web.Response
     )
 
     return web.Response(status=http.HTTPStatus.CREATED, content_type="application/json", text=create_response.to_json())
+
+
+async def get_manage_endpoint(request: web.Request) -> web.Response:
+    """Performs a collection of notifications for the requested endpoint id. This will "consume" all notifications
+    that are collected.
+
+    Args:
+        request: An aiohttp.web.Request instance.
+
+    Returns:
+        aiohttp.web.Response: Encodes a CollectEndpointResponse on success
+
+        a 200 (OK) on success - yielding a CollectEndpointResponse as JSON
+        a 404 (NOT_FOUND) if the endpoint has been deleted or the endpoint_id is invalid
+    """
+
+    endpoint_id = request.match_info.get("endpoint_id")
+    if not endpoint_id:
+        return web.Response(status=http.HTTPStatus.BAD_REQUEST, text="endpoint_id couldn't be extracted from the path.")
+
+    logger.info(f"Collecting endpoint {endpoint_id} for {request.remote}")
+
+    try:
+        collected_notifications = await request.app[APPKEY_NOTIFICATION_STORE].collect_notifications(endpoint_id)
+    except NotificationException as exc:
+        return web.Response(status=exc.status_code, text=str(exc))
+
+    collect_response = CollectEndpointResponse(
+        notifications=collected_notifications,
+    )
+
+    return web.Response(status=http.HTTPStatus.OK, content_type="application/json", text=collect_response.to_json())
+
+
+async def put_manage_endpoint(request: web.Request) -> web.Response:
+    """Updates the settings for an existing endpoint. Expects a ConfigureEndpointRequest in the request body
+
+    Args:
+        request: An aiohttp.web.Request instance.
+
+    Returns:
+        aiohttp.web.Response: Encodes a CreateEndpointResponse on success
+
+        a 204 (NO_CONTENT) on success.
+        a 404 (NOT_FOUND) if the endpoint has been deleted or the endpoint_id is invalid
+    """
+
+    endpoint_id = request.match_info.get("endpoint_id")
+    if not endpoint_id:
+        return web.Response(status=http.HTTPStatus.BAD_REQUEST, text="endpoint_id couldn't be extracted from the path.")
+
+    try:
+        raw_json = await request.text()
+    except ContentTypeError:
+        return web.Response(status=http.HTTPStatus.BAD_REQUEST, text="Missing JSON body")
+
+    configure_request = ConfigureEndpointRequest.from_json(raw_json)
+    if isinstance(configure_request, list):
+        return web.Response(status=http.HTTPStatus.BAD_REQUEST, text="Singular ConfigureEndpointRequest is required.")
+
+    logger.info(f"Configuring endpoint {endpoint_id} with {configure_request} for {request.remote}")
+
+    try:
+        await request.app[APPKEY_NOTIFICATION_STORE].update_endpoint(endpoint_id, enabled=configure_request.enabled)
+    except NotificationException as exc:
+        return web.Response(status=exc.status_code, text=str(exc))
+
+    return web.Response(status=http.HTTPStatus.NO_CONTENT)
