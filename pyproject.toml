@@ -4,6 +4,18 @@ line-length = 120
 [tool.pytest.ini_options]
 pythonpath = ["src/"]
 testpaths = "tests"
+asyncio_mode = "auto"
+markers = [
+    "APP_PORT: Sets the APP_PORT env variable variable at test startup",
+    "SERVER_URL: Sets the SERVER_URL env variable variable at test startup",
+    "MOUNT_POINT: Sets the MOUNT_POINT env variable variable at test startup",
+    "MAX_IDLE_DURATION_SECONDS: Sets the MAX_IDLE_DURATION_SECONDS env variable variable at test startup",
+    "MAX_DURATION_SECONDS: Sets the MAX_DURATION_SECONDS env variable variable at test startup",
+    "MAX_ACTIVE_ENDPOINTS: Sets the MAX_ACTIVE_ENDPOINTS env variable variable at test startup",
+    "MAX_ENDPOINT_NOTIFICATIONS: Sets the MAX_ENDPOINT_NOTIFICATIONS env variable variable at test startup",
+    "CLEANUP_FREQUENCY_SECONDS: Sets the CLEANUP_FREQUENCY_SECONDS env variable variable at test startup",
+]
+
 
 [tool.isort]
 profile = "black"
@@ -39,7 +51,7 @@ dependencies = [
 [project.optional-dependencies]
 server = ["aiohttp>=3.11.12,<4"]
 dev = ["bandit", "black", "coverage", "flake8", "flake8-bugbear", "mypy"]
-test = ["assertical", "pytest", "pytest-aiohttp", "freezegun"]
+test = ["assertical", "pytest", "pytest-asyncio", "pytest-aiohttp", "freezegun"]
 
 [tool.setuptools.package-data]
 "cactus_client_notifications" = ["py.typed", "**/*.xsd"]
