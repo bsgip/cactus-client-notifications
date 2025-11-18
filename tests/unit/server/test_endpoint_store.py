@@ -26,7 +26,6 @@ def test_generate_unique_id():
     assert len(ids) == len(set(ids)), "Should all be unique"
 
 
-@pytest.mark.asyncio
 async def test_EndpointStore_empty_operations():
     """Sanity checks the basic operations of the EndpointStore work with an empty store"""
     store = EndpointStore(max_active_endpoints=3, max_endpoint_notifications=2)
@@ -45,7 +44,6 @@ async def test_EndpointStore_empty_operations():
     assert exc_match.value.status_code == HTTPStatus.NOT_FOUND
 
 
-@pytest.mark.asyncio
 async def test_EndpointStore_basic_operations():
     """Sanity checks the basic operations of the EndpointStore"""
     store = EndpointStore(max_active_endpoints=4, max_endpoint_notifications=3)
@@ -107,7 +105,6 @@ async def test_EndpointStore_basic_operations():
     await store.add_notification(id3, n10)
 
 
-@pytest.mark.asyncio
 async def test_EndpointStore_cleanup():
     """Tests that the cleanup operation correctly wipes out expired endpoints"""
     store = EndpointStore(max_active_endpoints=99, max_endpoint_notifications=99)
@@ -148,7 +145,6 @@ async def test_EndpointStore_cleanup():
     assert await store.try_delete_endpoint(future_time) is True, "Should've been left alone"
 
 
-@pytest.mark.asyncio
 async def test_EndpointStore_disabled_endpoint():
     """Tests that the cleanup operation correctly wipes out expired endpoints"""
 
