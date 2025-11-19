@@ -7,13 +7,12 @@ from aiohttp import ClientSession
 from cactus_client_notifications.schema import (
     CollectEndpointResponse,
     ConfigureEndpointRequest,
-    CreateEndpointRequest,
     CreateEndpointResponse,
 )
 
 
 async def create_endpoint(client_session: ClientSession, endpoint: str) -> CreateEndpointResponse:
-    result = await client_session.post(endpoint, json=CreateEndpointRequest("abc-123").to_dict())
+    result = await client_session.post(endpoint)
     assert result.status == HTTPStatus.CREATED
     assert result.content_type == "application/json"
     response = CreateEndpointResponse.from_json(await result.text())
@@ -129,7 +128,7 @@ async def test_max_endpoint_limits(client_session: ClientSession):
     await create_endpoint(client_session, "/manage/endpoint")
 
     # Can't create more unless we delete first
-    result = await client_session.post("/manage/endpoint", json=CreateEndpointRequest("abc-123").to_dict())
+    result = await client_session.post("/manage/endpoint")
     assert result.status == HTTPStatus.INSUFFICIENT_STORAGE
     await delete_endpoint(client_session, f"/manage/endpoint/{endpoint2.endpoint_id}")
     await create_endpoint(client_session, "/manage/endpoint")

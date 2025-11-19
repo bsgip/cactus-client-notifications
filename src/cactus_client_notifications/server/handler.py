@@ -7,7 +7,6 @@ from cactus_client_notifications.schema import (
     URI_ENDPOINT,
     CollectEndpointResponse,
     ConfigureEndpointRequest,
-    CreateEndpointRequest,
     CreateEndpointResponse,
 )
 from cactus_client_notifications.server.endpoint_store import (
@@ -64,7 +63,7 @@ def generate_public_uri(server_settings: ServerSettings, endpoint_id: str) -> st
 
 
 async def post_manage_endpoint_list(request: web.Request) -> web.Response:
-    """Expects a CreateEndpointResponse to be included in the POST body. Creates a new endpoint
+    """Expects an empty POST body. Creates a new endpoint
 
     Args:
         request: An aiohttp.web.Request instance.
@@ -75,16 +74,8 @@ async def post_manage_endpoint_list(request: web.Request) -> web.Response:
         a 201 (CREATED) on success
         a 507 (INSUFFICIENT_STORAGE) if the webserver has too many notification endpoints at this moment
     """
-    try:
-        raw_json = await request.text()
-    except ContentTypeError:
-        return web.Response(status=http.HTTPStatus.BAD_REQUEST, text="Missing JSON body")
 
-    create_request = CreateEndpointRequest.from_json(raw_json)
-    if isinstance(create_request, list):
-        return web.Response(status=http.HTTPStatus.BAD_REQUEST, text="Singular CreateEndpointRequest is required.")
-
-    logger.info(f"Creating endpoint for Test ID {create_request.test_id} for {request.remote}")
+    logger.info(f"Creating endpoint for {request.remote}")
 
     try:
         endpoint_id = await request.app[APPKEY_NOTIFICATION_STORE].create_endpoint()

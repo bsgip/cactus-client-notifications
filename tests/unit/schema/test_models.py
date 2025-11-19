@@ -13,7 +13,6 @@ import cactus_client_notifications.schema as schema
         schema.CollectedNotification,
         schema.CollectEndpointResponse,
         schema.ConfigureEndpointRequest,
-        schema.CreateEndpointRequest,
         schema.CreateEndpointResponse,
     ],
 )
