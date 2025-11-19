@@ -27,13 +27,6 @@ URI_ENDPOINT = "/webhook/{endpoint_id}"
 
 
 @dataclass(frozen=True)
-class CreateEndpointRequest(JSONWizard):
-    """Used for requesting the generation of a new testing endpoint"""
-
-    test_id: str  # Purely informational
-
-
-@dataclass(frozen=True)
 class CreateEndpointResponse(JSONWizard):
     """Used in response to a CreateEndpointRequest"""
 
