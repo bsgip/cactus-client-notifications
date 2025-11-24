@@ -12,7 +12,7 @@ import cactus_client_notifications.schema as schema
 import cactus_client_notifications.server.shared as shared
 from cactus_client_notifications.server import handler
 from cactus_client_notifications.server.endpoint_store import EndpointStore
-from cactus_client_notifications.server.settings import ServerSettings
+from cactus_client_notifications.server.settings import ServerSettings, ServerStats
 from cactus_client_notifications.server.time import utc_now
 
 logger = logging.getLogger(__name__)
@@ -86,6 +86,7 @@ def create_app() -> web.Application:
         max_active_endpoints=server_settings.max_active_endpoints,
     )
     app[shared.APPKEY_SERVER_SETTINGS] = server_settings
+    app[shared.APPKEY_SERVER_STATS] = ServerStats()
 
     # Add routes for Test Runner
     mount = server_settings.mount_point
@@ -96,6 +97,7 @@ def create_app() -> web.Application:
     app.router.add_route("PUT", handler.path_join(mount, schema.URI_MANAGE_ENDPOINT), handler.put_manage_endpoint)
     app.router.add_route("DELETE", handler.path_join(mount, schema.URI_MANAGE_ENDPOINT), handler.delete_manage_endpoint)
     app.router.add_route("*", handler.path_join(mount, schema.URI_ENDPOINT), handler.webhook_endpoint)
+    app.router.add_route("GET", handler.path_join(mount, schema.URI_MANAGE_SERVER), handler.get_manage_server)
 
     # Start the periodic task
     app.cleanup_ctx.append(setup_periodic_task)

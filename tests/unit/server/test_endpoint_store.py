@@ -3,11 +3,13 @@ from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 
 import pytest
+from assertical.asserts.type import assert_list_type
 from assertical.fake.generator import generate_class_instance
 from freezegun import freeze_time
 
 from cactus_client_notifications.schema import CollectedNotification
 from cactus_client_notifications.server.endpoint_store import (
+    EndpointMetadata,
     EndpointStore,
     NotificationException,
     generate_unique_id,
@@ -73,6 +75,10 @@ async def test_EndpointStore_basic_operations():
     n6 = generate_class_instance(CollectedNotification, seed=6, generate_relationships=True)
     await store.add_notification(id2, n5)
     await store.add_notification(id2, n6)
+
+    # Check the metadata
+    metadata = await store.get_endpoint_metadata()
+    assert_list_type(EndpointMetadata, metadata, count=4)
 
     assert await store.collect_notifications(id1) == [n1, n2, n3]
     assert await store.collect_notifications(id1) == []
