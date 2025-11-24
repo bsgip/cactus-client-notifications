@@ -17,6 +17,7 @@ from cactus_client_notifications.server.settings import ServerSettings
 from cactus_client_notifications.server.shared import (
     APPKEY_NOTIFICATION_STORE,
     APPKEY_SERVER_SETTINGS,
+    APPKEY_SERVER_STATS,
 )
 
 logger = logging.getLogger(__name__)
@@ -75,11 +76,13 @@ async def post_manage_endpoint_list(request: web.Request) -> web.Response:
         a 507 (INSUFFICIENT_STORAGE) if the webserver has too many notification endpoints at this moment
     """
 
+    request.app[APPKEY_SERVER_STATS].total_created_webhooks += 1
     logger.info(f"Creating endpoint for {request.remote}")
 
     try:
         endpoint_id = await request.app[APPKEY_NOTIFICATION_STORE].create_endpoint()
     except NotificationException as exc:
+        request.app[APPKEY_SERVER_STATS].total_created_webhook_errors += 1
         logger.error("Error creating endpoint", exc_info=exc)
         return web.Response(status=exc.status_code, text=str(exc))
 
@@ -109,11 +112,13 @@ async def get_manage_endpoint(request: web.Request) -> web.Response:
     if not endpoint_id:
         return web.Response(status=http.HTTPStatus.BAD_REQUEST, text="endpoint_id couldn't be extracted from the path.")
 
+    request.app[APPKEY_SERVER_STATS].total_collections += 1
     logger.info(f"Collecting endpoint {endpoint_id} for {request.remote}")
 
     try:
         collected_notifications = await request.app[APPKEY_NOTIFICATION_STORE].collect_notifications(endpoint_id)
     except NotificationException as exc:
+        request.app[APPKEY_SERVER_STATS].total_collection_errors += 1
         logger.error(f"Error updating config for {endpoint_id}", exc_info=exc)
         return web.Response(status=exc.status_code, text=str(exc))
 
@@ -141,13 +146,17 @@ async def put_manage_endpoint(request: web.Request) -> web.Response:
     if not endpoint_id:
         return web.Response(status=http.HTTPStatus.BAD_REQUEST, text="endpoint_id couldn't be extracted from the path.")
 
+    request.app[APPKEY_SERVER_STATS].total_configures += 1
+
     try:
         raw_json = await request.text()
     except ContentTypeError:
+        request.app[APPKEY_SERVER_STATS].total_configure_errors += 1
         return web.Response(status=http.HTTPStatus.BAD_REQUEST, text="Missing JSON body")
 
     configure_request = ConfigureEndpointRequest.from_json(raw_json)
     if isinstance(configure_request, list):
+        request.app[APPKEY_SERVER_STATS].total_configure_errors += 1
         return web.Response(status=http.HTTPStatus.BAD_REQUEST, text="Singular ConfigureEndpointRequest is required.")
 
     logger.info(f"Configuring endpoint {endpoint_id} with {configure_request} for {request.remote}")
@@ -155,6 +164,7 @@ async def put_manage_endpoint(request: web.Request) -> web.Response:
     try:
         await request.app[APPKEY_NOTIFICATION_STORE].update_endpoint(endpoint_id, enabled=configure_request.enabled)
     except NotificationException as exc:
+        request.app[APPKEY_SERVER_STATS].total_configure_errors += 1
         logger.error(f"Error configuring {endpoint_id} with {configure_request}", exc_info=exc)
         return web.Response(status=exc.status_code, text=str(exc))
 
@@ -178,11 +188,14 @@ async def delete_manage_endpoint(request: web.Request) -> web.Response:
     if not endpoint_id:
         return web.Response(status=http.HTTPStatus.BAD_REQUEST, text="endpoint_id couldn't be extracted from the path.")
 
+    request.app[APPKEY_SERVER_STATS].total_deletes += 1
+
     logger.info(f"Deleting endpoint {endpoint_id} for {request.remote}")
 
     try:
         await request.app[APPKEY_NOTIFICATION_STORE].try_delete_endpoint(endpoint_id)
     except NotificationException as exc:
+        request.app[APPKEY_SERVER_STATS].total_delete_errors += 1
         logger.error(f"Error deleting {endpoint_id}", exc_info=exc)
         return web.Response(status=exc.status_code, text=str(exc))
 
@@ -209,9 +222,12 @@ async def webhook_endpoint(request: web.Request) -> web.Response:
     if not endpoint_id:
         return web.Response(status=http.HTTPStatus.NOT_FOUND)
 
+    request.app[APPKEY_SERVER_STATS].total_notifications += 1
+
     try:
         collected_notification = await generate_collected_notification(request)
     except Exception as exc:
+        request.app[APPKEY_SERVER_STATS].total_notification_errors += 1
         logger.error(f"Error parsing incoming webhook request for {endpoint_id} from {request.remote}", exc_info=exc)
         return web.Response(status=http.HTTPStatus.BAD_REQUEST)
 
@@ -227,3 +243,52 @@ async def webhook_endpoint(request: web.Request) -> web.Response:
         return web.Response(status=exc.status_code, text=str(exc))
 
     return web.Response(status=http.HTTPStatus.OK)
+
+
+async def get_manage_server(request: web.Request) -> web.Response:
+    """Returns a text/plain readout of the current server status
+
+    Returns:
+        aiohttp.web.Response: Encodes a plaintext response body
+
+        a 200 (OK) on success.
+    """
+
+    endpoint_metadata = await request.app[APPKEY_NOTIFICATION_STORE].get_endpoint_metadata()
+    stats = request.app[APPKEY_SERVER_STATS]
+    settings = request.app[APPKEY_SERVER_SETTINGS]
+
+    sep = "-" * 40
+    lines: list[str] = [
+        "CACTUS Client Notifications Server",
+        sep,
+        "SETTINGS",
+        f"Started: {stats.created_at.isoformat()}",
+        f"Max Active Endpoints: {settings.max_active_endpoints}",
+        f"Max Endpoint Notifications: {settings.max_endpoint_notifications}",
+        f"Cleanup Frequency: {settings.cleanup_frequency.total_seconds()}s",
+        f"Max Endpoint Idle Time: {settings.max_endpoint_idle_duration.total_seconds()}s",
+        f"Max Endpoint Total Time: {settings.max_endpoint_duration.total_seconds()}s",
+        f"Mount Point: {settings.mount_point}",
+        f"Public URL: {settings.public_server_url}",
+        sep,
+        "STATS",
+        f"Total created notifications: {stats.total_notifications} (with {stats.total_notification_errors} errors)",
+        f"Total collection requests: {stats.total_collections} (with {stats.total_collection_errors} errors)",
+        f"Total received notifications: {stats.total_notifications} (with {stats.total_notification_errors} errors)",
+        f"Total configure requests: {stats.total_configures} (with {stats.total_configure_errors} errors)",
+        sep,
+        f"ENDPOINTS ({len(endpoint_metadata)} total)",
+    ]
+
+    for endpoint in endpoint_metadata:
+        lines.append("")
+        lines.append(f"Endpoint {endpoint.endpoint_id[:4]}...")  # Don't show the full ID - just enough to watch things
+        lines.append(f"    {endpoint.total_notifications} uncollected notifications")
+        lines.append(f"    Enabled: {endpoint.enabled}")
+        lines.append(f"    Created: {endpoint.created_at.isoformat()}")
+        lines.append(f"    Last Touched: {endpoint.interacted_at.isoformat()}")
+
+    lines.append(sep)
+
+    return web.Response(status=http.HTTPStatus.OK, text="\n".join(lines))

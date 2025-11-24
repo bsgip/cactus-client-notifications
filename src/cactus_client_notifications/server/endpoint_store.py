@@ -2,6 +2,7 @@ import asyncio
 import base64
 import logging
 import secrets
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from http import HTTPStatus
 from typing import Any
@@ -52,6 +53,17 @@ class EndpointData:
         self.enabled = True
         self.interacted_at = utc_now()
         self.created_at = utc_now()
+
+
+@dataclass
+class EndpointMetadata:
+    """Basic metadata about an Endpoint in the EndpointStore"""
+
+    endpoint_id: str
+    total_notifications: int
+    enabled: bool  # Is this endpoint enabled?
+    created_at: datetime  # When was this endpoint created?
+    interacted_at: datetime  # When did the last notification get received / endpoint get touched
 
 
 class EndpointStore:
@@ -180,3 +192,16 @@ class EndpointStore:
             for endpoint_id in expired_endpoint_ids:
                 logger.info(f"Cleanup has deleted endpoint {endpoint_id}")
                 del self._store[endpoint_id]
+
+    async def get_endpoint_metadata(self) -> list[EndpointMetadata]:
+        async with self.lock:
+            return [
+                EndpointMetadata(
+                    endpoint_id,
+                    len(endpoint.notifications),
+                    endpoint.enabled,
+                    endpoint.created_at,
+                    endpoint.interacted_at,
+                )
+                for endpoint_id, endpoint in self._store.items()
+            ]

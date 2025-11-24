@@ -4,6 +4,14 @@ from datetime import datetime
 from dataclass_wizard import JSONWizard
 
 #
+# GET - Returns a text/plain response with server status
+# POST Not Supported
+# PUT - Not Supported
+# DELETE - Not Supported
+#
+URI_MANAGE_SERVER = "/manage"
+
+#
 # GET - Not Supported
 # POST CreateEndpointRequest -> CreateEndpointResponse
 # PUT - Not Supported

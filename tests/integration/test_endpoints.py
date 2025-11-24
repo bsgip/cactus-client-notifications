@@ -210,3 +210,26 @@ async def test_endpoint_cleanup(client_session: ClientSession):
     assert (
         await send_notification(client_session, f"/webhook/{endpoint3.endpoint_id}", "POST", "req3")
     ) == 404, "This should've expired by now"
+
+
+async def test_server_info(client_session: ClientSession):
+
+    # Empty server info
+    result = await client_session.get("/manage")
+    assert result.status == HTTPStatus.OK
+    assert result.content_type == "text/plain"
+    text_before = await result.text()
+    assert text_before
+
+    # Create some endpoints / notifications
+    endpoint1 = await create_endpoint(client_session, "/manage/endpoint")
+    await create_endpoint(client_session, "/manage/endpoint")
+    assert (await send_notification(client_session, f"/webhook/{endpoint1.endpoint_id}", "POST", "req1")) == 200
+
+    # Full server info
+    result = await client_session.get("/manage")
+    assert result.status == HTTPStatus.OK
+    assert result.content_type == "text/plain"
+    text_after = await result.text()
+    assert text_after
+    assert text_after != text_before
