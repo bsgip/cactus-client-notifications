@@ -1,5 +1,6 @@
 import http
 import logging
+from importlib.metadata import version
 
 from aiohttp import ContentTypeError, web
 
@@ -19,6 +20,8 @@ from cactus_client_notifications.server.shared import (
     APPKEY_SERVER_SETTINGS,
     APPKEY_SERVER_STATS,
 )
+
+VERSION = version("cactus_client_notifications")
 
 logger = logging.getLogger(__name__)
 
@@ -260,7 +263,7 @@ async def get_manage_server(request: web.Request) -> web.Response:
 
     sep = "-" * 40
     lines: list[str] = [
-        "CACTUS Client Notifications Server",
+        f"CACTUS Client Notifications Server {VERSION}",
         sep,
         "SETTINGS",
         f"Started: {stats.created_at.isoformat()}",
