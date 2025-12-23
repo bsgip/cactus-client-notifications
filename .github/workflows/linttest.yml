@@ -59,7 +59,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install .[server,dev]
+          pip install .[dev]
 
       - name: Run mypy
         run: mypy .
@@ -82,7 +82,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install .[server,test]
+          pip install .[test]
 
       - name: Run Pytest
         run: pytest
