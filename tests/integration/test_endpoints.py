@@ -3,8 +3,7 @@ from http import HTTPStatus
 
 import pytest
 from aiohttp import ClientSession
-
-from cactus_client_notifications.schema import (
+from cactus_schema.notification import (
     CollectEndpointResponse,
     ConfigureEndpointRequest,
     CreateEndpointResponse,

@@ -1,9 +1,8 @@
+import cactus_schema.notification as schema
 import pytest
 from assertical.asserts.generator import assert_class_instance_equality
 from assertical.fake.generator import generate_class_instance
 from dataclass_wizard import JSONWizard
-
-import cactus_client_notifications.schema as schema
 
 
 @pytest.mark.parametrize(
