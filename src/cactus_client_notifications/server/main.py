@@ -7,8 +7,8 @@ from datetime import timedelta
 from typing import AsyncGenerator
 
 from aiohttp import web
+from cactus_schema.notification import uri
 
-import cactus_client_notifications.schema as schema
 import cactus_client_notifications.server.shared as shared
 from cactus_client_notifications.server import handler
 from cactus_client_notifications.server.endpoint_store import EndpointStore
@@ -91,13 +91,13 @@ def create_app() -> web.Application:
     # Add routes for Test Runner
     mount = server_settings.mount_point
     app.router.add_route(
-        "POST", handler.path_join(mount, schema.URI_MANAGE_ENDPOINT_LIST), handler.post_manage_endpoint_list
+        "POST", handler.path_join(mount, uri.URI_MANAGE_ENDPOINT_LIST), handler.post_manage_endpoint_list
     )
-    app.router.add_route("GET", handler.path_join(mount, schema.URI_MANAGE_ENDPOINT), handler.get_manage_endpoint)
-    app.router.add_route("PUT", handler.path_join(mount, schema.URI_MANAGE_ENDPOINT), handler.put_manage_endpoint)
-    app.router.add_route("DELETE", handler.path_join(mount, schema.URI_MANAGE_ENDPOINT), handler.delete_manage_endpoint)
-    app.router.add_route("*", handler.path_join(mount, schema.URI_ENDPOINT), handler.webhook_endpoint)
-    app.router.add_route("GET", handler.path_join(mount, schema.URI_MANAGE_SERVER), handler.get_manage_server)
+    app.router.add_route("GET", handler.path_join(mount, uri.URI_MANAGE_ENDPOINT), handler.get_manage_endpoint)
+    app.router.add_route("PUT", handler.path_join(mount, uri.URI_MANAGE_ENDPOINT), handler.put_manage_endpoint)
+    app.router.add_route("DELETE", handler.path_join(mount, uri.URI_MANAGE_ENDPOINT), handler.delete_manage_endpoint)
+    app.router.add_route("*", handler.path_join(mount, uri.URI_ENDPOINT), handler.webhook_endpoint)
+    app.router.add_route("GET", handler.path_join(mount, uri.URI_MANAGE_SERVER), handler.get_manage_server)
 
     # Start the periodic task
     app.cleanup_ctx.append(setup_periodic_task)

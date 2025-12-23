@@ -3,13 +3,13 @@ import logging
 from importlib.metadata import version
 
 from aiohttp import ContentTypeError, web
-
-from cactus_client_notifications.schema import (
-    URI_ENDPOINT,
+from cactus_schema.notification import (
     CollectEndpointResponse,
     ConfigureEndpointRequest,
     CreateEndpointResponse,
+    uri,
 )
+
 from cactus_client_notifications.server.endpoint_store import (
     NotificationException,
     generate_collected_notification,
@@ -62,7 +62,7 @@ def path_join(*parts: str) -> str:
 def generate_public_uri(server_settings: ServerSettings, endpoint_id: str) -> str:
     """Generates the public facing URI for a specific endpoint_id"""
     return path_join(
-        server_settings.public_server_url, server_settings.mount_point, URI_ENDPOINT.format(endpoint_id=endpoint_id)
+        server_settings.public_server_url, server_settings.mount_point, uri.URI_ENDPOINT.format(endpoint_id=endpoint_id)
     )
 
 

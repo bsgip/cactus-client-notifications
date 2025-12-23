@@ -42,14 +42,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "cactus_client_notifications"
 dynamic = ["version", "readme"]
-description = "Schema and mini webserver for accepting CSIP-Aus subscription notifications via dynamic webhook URIs."
+description = "Mini webserver for accepting CSIP-Aus subscription notifications via dynamic webhook URIs."
 dependencies = [
-    "dataclass-wizard>=0.35.0,<1",
-
+    "cactus-schema>=0.0.4,<1",
+    "aiohttp>=3.11.12,<4",
 ] # These dependencies are purely for the schema (the default reference). Server dependencies require "server"
 
 [project.optional-dependencies]
-server = ["aiohttp>=3.11.12,<4"]
 dev = ["bandit", "black", "coverage", "flake8", "flake8-bugbear", "mypy"]
 test = ["assertical", "pytest", "pytest-asyncio", "pytest-aiohttp", "freezegun"]
 
