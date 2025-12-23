@@ -5,9 +5,9 @@ from http import HTTPStatus
 import pytest
 from assertical.asserts.type import assert_list_type
 from assertical.fake.generator import generate_class_instance
+from cactus_schema.notification import CollectedNotification
 from freezegun import freeze_time
 
-from cactus_client_notifications.schema import CollectedNotification
 from cactus_client_notifications.server.endpoint_store import (
     EndpointMetadata,
     EndpointStore,

@@ -8,8 +8,8 @@ from http import HTTPStatus
 from typing import Any
 
 from aiohttp import web
+from cactus_schema.notification import CollectedHeader, CollectedNotification
 
-from cactus_client_notifications.schema import CollectedHeader, CollectedNotification
 from cactus_client_notifications.server.time import utc_now
 
 logger = logging.getLogger(__name__)

@@ -8,7 +8,7 @@ RUN apt-get update; apt-get install -y git openssh-client
 RUN git config --global url."https://git@github.com/".insteadOf "ssh://git@github.com/"
 
 # Install app / dependencies
-RUN pip install --no-cache-dir "cactus-client-notifications[server] @ git+ssh://git@github.com/bsgip/cactus-client-notifications.git@${CACTUS_CLIENT_NOTIFICATIONS_VERSION}" gunicorn
+RUN pip install --no-cache-dir "cactus-client-notifications @ git+ssh://git@github.com/bsgip/cactus-client-notifications.git@${CACTUS_CLIENT_NOTIFICATIONS_VERSION}" gunicorn
 
 # RUN stage
 FROM  python:3.12-slim

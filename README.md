@@ -11,11 +11,9 @@ Any mutual TLS / other considerations are expected to be managed at the point of
 
 ## Development
 
-`pip install cactus_client_notifications` will install ONLY the schema dependencies (the default)
+`pip install cactus_client_notifications` will install all dependencies for running the server
 
-`pip install cactus_client_notifications[server]` will also install the dependencies for running the server (use for deployments)
-
-`pip install cactus_client_notifications[server,dev,test]` will install ALL dependencies for development / tests
+`pip install cactus_client_notifications[dev,test]` will install ALL dependencies for development / tests
 
 ## Configuration
 
