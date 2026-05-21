@@ -3,8 +3,8 @@ import contextlib
 import logging
 import os
 import sys
+from collections.abc import AsyncGenerator
 from datetime import timedelta
-from typing import AsyncGenerator
 
 from aiohttp import web
 from cactus_schema.notification import uri
